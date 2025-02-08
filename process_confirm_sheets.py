@@ -17,16 +17,15 @@ def process_confirm_sheets(data, study_year, semester, start_year, start_month,
     
     data["姓名是否中文"] = data["姓名"].apply(is_chinese)
     data_cn = data[data["姓名是否中文"]]
+    # 筛选班级
+    pattern = "|".join(map(re.escape, class_list))
+    unique_classes = [
+        cls for cls in data_cn["班级"].dropna().unique() 
+        if re.search(pattern, cls)
+    ]
     
     # 确认签字表
     def create_confirm_sheet():
-
-        # 筛选班级
-        pattern = "|".join(map(re.escape, class_list))
-        unique_classes = [
-            cls for cls in data_cn["班级"].dropna().unique() 
-            if re.search(pattern, cls)
-        ]
 
         # 设置样式并写入内容
         for class_name in unique_classes:
@@ -62,7 +61,7 @@ def process_confirm_sheets(data, study_year, semester, start_year, start_month,
     def create_summary_sheet():
 
         # 筛选数据
-        filtered_data = data_cn[(data["旷课课时"] > 0)]
+        filtered_data = data_cn[(data_cn["旷课课时"] > 0)]
         filtered_data = filtered_data[["学号", "姓名", "班级", "旷课次数", "迟到次数", "早退次数", "旷课课时"]]
         filtered_data["学号"] = filtered_data["学号"].astype(str)
         filtered_data = filtered_data.sort_values(by=["旷课课时", "旷课次数"], ascending=[False, False])
@@ -101,7 +100,7 @@ def process_confirm_sheets(data, study_year, semester, start_year, start_month,
         column_widths_common = [5, 12, 35, 40, 31, 6]
         column_widths_sheet2 = [5, 12, 35, 40, 31, 6, 10]
 
-        filtered_data = data[(data["旷课课时"] >= 5) & data["姓名是否中文"]]
+        filtered_data = data_cn[(data_cn["旷课课时"] >= 5) & data_cn["班级"].isin(unique_classes)]
         filtered_data = filtered_data.sort_values(by=["旷课课时", "旷课次数"], ascending=[True, True])
         sheet1_data = filtered_data[(filtered_data['旷课课时'] >= 5) & (filtered_data['旷课课时'] < 10)]
         sheet2_data = filtered_data[(filtered_data['旷课课时'] >= 10) & (filtered_data['旷课课时'] < 30)]
