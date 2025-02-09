@@ -1,7 +1,7 @@
 # 上课啦考勤表制作工具
 
 ## 简介
-这是一个用于制作上课啦平时考勤文件以及学期末汇总文件的自动化办公小项目，运用Streamlit构建用户界面，并利用Pandas,python-docx和OpenPyXL等库进行数据处理和Excel文件生成。
+这是一个用于制作上课啦平时考勤文件以及学期末汇总文件的自动化办公小项目，分别运用Streamlit和Tkinter构建了两种用户界面，利用Pandas,python-docx和OpenPyXL等库进行数据处理文件生成。
 
 项目已部署到streamlit cloud community([demo](https://sheet-tool-zsjsj.streamlit.app/)),由于操作系统差异，某些依赖无法安装，demo中生成的pdf效果差一些。
 
@@ -9,6 +9,7 @@
 ```
 main
 ├── app.py                       # Streamlit应用程序代码
+├── tkinter_ui.py                # 基于Tkinter,ttkbootstrap的GUI程序
 ├── process_attendance_files.py  # 处理周/月考勤数据的逻辑
 ├── process_confirm_sheets.py    # 处理学期考勤数据的逻辑
 ├── tools.py                     # 处理数据时相关函数工具
@@ -45,10 +46,16 @@ streamlit run app.py
 
 ```
 
+或者启动tkinter_ui.py
+```
+python tkinter_ui.py
+
+```
+
 ### 🛸 直接运行EXE文件
 
 
-在release中下载"app.zip"文件，解压后执行"上课啦表格制作.exe"即可。
+在release中下载相关文件直接运行即可！🎉
 
 
 ## 交流学习

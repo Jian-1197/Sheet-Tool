@@ -14,6 +14,13 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from docx2pdf import convert     # win系统下需有word，利用docx2pdf库将docx文件转换为pdf文件
 import subprocess                # 其他平台需安装libreOffice用命令行实现转换，保真度差一些
+from io import StringIO
+from contextlib import redirect_stdout, redirect_stderr
+
+
+# 创建一个 StringIO 对象用于捕获输出
+temp_stdout = StringIO()
+temp_stderr = StringIO()
 
 def process_attendance_files(data, date, year, month, day, output_folder):
 
@@ -154,7 +161,8 @@ def process_attendance_files(data, date, year, month, day, output_folder):
 
         # windows下可采用docx2pdf实现转换
         if os.name == "nt":
-            convert(docx_path, pdf_output)
+            with redirect_stdout(temp_stdout), redirect_stderr(temp_stderr):
+                convert(docx_path, pdf_output)
         else:
             convert_docx_to_pdf(docx_path, output_folder)
 
