@@ -239,12 +239,14 @@ class AttendanceTab(ctk.CTkFrame):
 
         if not (file1 and file2):
             messagebox.showwarning("警告", "请先选择所有必需文件！")
+            self.generate_button.configure(state="normal")
             return
 
         try:
             calendar = datetime.strptime(date_str, "%Y-%m-%d")
         except Exception as e:
             messagebox.showerror("错误", f"日期格式错误：请按 YYYY-MM-DD 格式输入\n{e}")
+            self.generate_button.configure(state="normal")
             return
 
         self.app.start_progress()
@@ -379,6 +381,7 @@ class ConfirmTab(ctk.CTkFrame):
         file_att = self.file_attendance_path.get()
         if not file_att:
             messagebox.showwarning("警告", "请先选择考勤数据文件！")
+            self.generate_button.configure(state="normal")
             return
 
         study_year = self.study_year_combo.get().strip()
@@ -395,11 +398,13 @@ class ConfirmTab(ctk.CTkFrame):
 
         if not grade:
             messagebox.showwarning("警告", "年级范围必填！")
+            self.generate_button.configure(state="normal")
             return
 
         pattern = re.compile(r"^\d{2}\s*-\s*\d{2}$")
         if not pattern.match(grade):
             messagebox.showerror("错误", "格式错误：请按示例格式输入（如22-24）")
+            self.generate_button.configure(state="normal")
             return
 
         try:
@@ -411,6 +416,7 @@ class ConfirmTab(ctk.CTkFrame):
             class_list = [f"{g}{str(i).zfill(2)}" for g in grade_list for i in range(1, int(max_classes) + 1)]
         except Exception as e:
             messagebox.showerror("错误", f"年级转换错误：{str(e)}")
+            self.generate_button.configure(state="normal")
             return
 
         try:
@@ -418,6 +424,7 @@ class ConfirmTab(ctk.CTkFrame):
             end_date = datetime.strptime(end_date_str, "%Y-%m-%d")
         except Exception as e:
             messagebox.showerror("错误", f"日期格式错误：请按 YYYY-MM-DD 格式输入\n{e}")
+            self.generate_button.configure(state="normal")
             return
 
         self.app.start_progress()
