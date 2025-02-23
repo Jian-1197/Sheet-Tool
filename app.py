@@ -62,8 +62,9 @@ with tab1:
                 with st.spinner('正在处理数据，请稍候...'):
                     try:
                         # 为了避免多线程冲突，需要初始化COM组件
-                        import pythoncom
-                        pythoncom.CoInitialize()
+                        if 'win' in sys.platform:
+                            import pythoncom
+                            pythoncom.CoInitialize()
 
                         year = calendar.strftime('%Y')
                         month = calendar.strftime('%m')
