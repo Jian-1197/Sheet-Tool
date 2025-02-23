@@ -5,11 +5,15 @@
 
 项目已部署到streamlit cloud community([demo](https://sheet-tool-zsjsj.streamlit.app/)),由于操作系统差异，某些依赖无法安装，demo中生成的pdf效果差一些。
 
+同时项目已用pyinstaller打包成exe，可在release中查看，为简洁仓库中未上传打包相关文件。
+
+ui构建借助ai工具辅助完成。
+
 ## 文件结构
 ```
 main
 ├── app.py                       # Streamlit应用程序代码
-├── tkinter_ui.py                # 基于Tkinter,ttkbootstrap的GUI程序
+├── ctk_ui.py                    # 基于Tkinter,customtkinter的GUI程序
 ├── process_attendance_files.py  # 处理周/月考勤数据的逻辑
 ├── process_confirm_sheets.py    # 处理学期考勤数据的逻辑
 ├── tools.py                     # 处理数据时相关函数工具
@@ -48,7 +52,7 @@ streamlit run app.py
 
 或者启动tkinter_ui.py
 ```
-python tkinter_ui.py
+python ctk_ui.py
 
 ```
 

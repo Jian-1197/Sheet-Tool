@@ -61,19 +61,27 @@ with tab1:
             if uploaded_file_1 and uploaded_file_2:
                 with st.spinner('正在处理数据，请稍候...'):
                     try:
+                        # 为了避免多线程冲突，需要初始化COM组件
+                        import pythoncom
+                        pythoncom.CoInitialize()
+
                         year = calendar.strftime('%Y')
                         month = calendar.strftime('%m')
                         day = calendar.strftime('%d')
                         data = pd.read_excel(uploaded_file_1)
-                        data_1 = pd.read_excel(uploaded_file_2)
+
 
                         output_folder_3 = f"第{date}"
                         os.makedirs(output_folder_3, exist_ok=True)
 
                         # 保存原始数据
-                        data.to_excel(os.path.join(output_folder_3, "原始数据.xlsx"), index=False)
-                        data_1.to_excel(os.path.join(output_folder_3, f"计算机科学与技术学院第{date}上课啦考勤明细.xlsx"), index=False)
-
+                        file1 = os.path.join(output_folder_3, "原始数据.xlsx")
+                        file2 = os.path.join(output_folder_3, f"计算机科学与技术学院第{date}上课啦考勤明细.xlsx")
+                        with open(file1, 'wb') as f:
+                            f.write(uploaded_file_1.getvalue())
+                        with open(file2, 'wb') as f:
+                            f.write(uploaded_file_2.getvalue())
+                            
                         process_attendance_files(data, date, year, month, day, output_folder_3)
                         
                         zip_files([output_folder_3], f"{output_folder_3}")
