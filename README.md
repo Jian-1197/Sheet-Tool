@@ -58,7 +58,7 @@ python run_app.py
 
 ```
 
-或者启动tkinter_ui.py
+或者启动customtkinter_ui.py
 ```
 python ctk_ui.py
 
