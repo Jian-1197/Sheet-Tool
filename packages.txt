@@ -1,2 +1,2 @@
-libreoffice
+abiword
 fonts-noto-cjk
