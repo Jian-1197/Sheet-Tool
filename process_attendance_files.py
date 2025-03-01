@@ -13,7 +13,7 @@ from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
 from docx2pdf import convert     # win系统下需有word，利用docx2pdf库将docx文件转换为pdf文件
-import subprocess                # 其他平台需安装libreOffice用命令行实现转换，保真度差一些
+import subprocess                # 其他平台需安装abiword软件，利用subprocess库调用abiword命令将docx文件转换为pdf文件
 from io import StringIO
 from contextlib import redirect_stdout, redirect_stderr
 
@@ -140,18 +140,15 @@ def process_attendance_files(data, date, year, month, day, output_folder):
     # 考勤通报pdf
     def create_pdf(docx_path):
         def convert_docx_to_pdf(input_file, output_dir='.'):
-            # 构建命令字符串，包含输出目录参数
+            pdf_output = f"{output_folder}/计算机科学与技术学院学生第{date}上课啦系统缺勤通报.pdf"
             command = [
-                'soffice',  # LibreOffice/OpenOffice 的命令行工具
-                '--headless',  # 不显示图形用户界面
-                '--invisible',  # 运行时不可见
-                '--convert-to', 'pdf:writer_pdf_Export:AutoTableColumnWidths=false',  # 转换格式为目标格式
-                '--outdir', output_dir,  # 指定输出目录
-                input_file  # 输入文件路径
+                'abiword',
+                '--to=pdf',
+                f'--to-name={pdf_output}',
+                input_file
             ]
-
             try:
-                # 使用 subprocess.run 来执行命令
+                # 使用 subprocess.run 执行命令
                 result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 print("转换成功", result.stdout.decode('utf-8', errors='ignore'))
             except subprocess.CalledProcessError as e:
