@@ -21,7 +21,6 @@ main
 ├── run_app.spec                 # pyinstaller打包规范文件
 ├── ctk_ui.spec                  # pyinstaller打包规范文件
 ├── requirements.txt             # 项目依赖
-├── packages.txt                 # 其他依赖（非云部署时不需要）
 └── README.md                    # 项目文档
 ```
 
