@@ -3,7 +3,7 @@
 ## 简介
 这是一个用于制作上课啦平时考勤文件以及学期末汇总文件的自动化办公小项目，分别运用Streamlit和Tkinter构建了两种用户界面，利用Pandas,python-docx和OpenPyXL等库进行数据处理文件生成。
 
-项目已部署到streamlit cloud community([demo](https://sheet-tool-zsjsj.streamlit.app/)),由于操作系统差异，某些依赖无法安装，demo中生成的pdf效果差一些。
+项目已部署到streamlit cloud community([demo](https://sheet-tool-zsjsj.streamlit.app/))
 
 同时项目用pyinstaller打包成exe，可在release中查看，也可自行根据spec文件构建。
 

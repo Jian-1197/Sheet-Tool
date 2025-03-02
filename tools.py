@@ -1,9 +1,17 @@
 import re
 import os
+import sys
 import zipfile
 import shutil
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment, Font, Border, Side
+
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib import colors
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.units import mm
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_LEFT, TA_RIGHT
 
 # 中文名字筛选
 def is_chinese(name):
@@ -154,6 +162,95 @@ def write_circular_sheet(ws, data, headers, col_widths, title, time_str, reason_
                 cell.font = 内容字体
             cell.alignment = 对齐方式
             cell.border = 边框样式
+
+# pdf 注册宋体
+def register_chinese_font(font_name='SimSun', font_file=f'font/simsun.ttf'):
+    # 判断是否为 PyInstaller 打包环境
+    if hasattr(sys, '_MEIPASS'):
+        base_path = sys._MEIPASS
+    else:
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    font_path = os.path.join(base_path, font_file)
+    try:
+        pdfmetrics.registerFont(TTFont(font_name, font_path))
+    except Exception as e:
+        print(f"Warning: {font_name} font not found, using fallback font")
+
+# pdf 样式设置
+def get_pdf_styles(cn_font='SimSun'):
+    styles = getSampleStyleSheet()
+    style_title = ParagraphStyle(
+        'Title',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=22,
+        leading=24,
+        alignment=TA_CENTER,
+        spaceAfter=10*mm,
+        textColor=colors.black
+    )
+    style_content = ParagraphStyle(
+        'Content',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=16,
+        leading=20,
+        alignment=TA_JUSTIFY,
+        wordWrap='CJK',
+        spaceAfter=8*mm
+    )
+    style_table_header = ParagraphStyle(
+        'TableHeader',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=12,
+        alignment=TA_CENTER,
+        textColor=colors.black,
+        leading=14
+    )
+    style_table_cell = ParagraphStyle(
+        'TableCell',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=12,
+        alignment=TA_CENTER,
+        leading=14
+    )
+    style_note = ParagraphStyle(
+        'Note',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=12,
+        leading=16,
+        alignment=TA_LEFT,
+        spaceAfter=6*mm
+    )
+    style_sign = ParagraphStyle(
+        'Sign',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=16,
+        leading=20,
+        alignment=TA_LEFT,
+        spaceAfter=6*mm
+    )
+    style_date = ParagraphStyle(
+        'Date',
+        parent=styles['Normal'],
+        fontName=cn_font,
+        fontSize=16,
+        leading=20,
+        alignment=TA_RIGHT
+    )
+    return {
+        'title': style_title,
+        'content': style_content,
+        'table_header': style_table_header,
+        'table_cell': style_table_cell,
+        'note': style_note,
+        'sign': style_sign,
+        'date': style_date,
+    }
 
 # 压缩文件夹
 def zip_files(dirs, output):

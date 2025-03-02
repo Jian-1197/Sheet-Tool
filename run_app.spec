@@ -1,17 +1,16 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import os
 from PyInstaller.utils.hooks import collect_data_files
 from PyInstaller.utils.hooks import copy_metadata
 
 datas = [
     ("E:/miniconda3/envs/pack/Lib/site-packages/streamlit/runtime", "./streamlit/runtime"),
-    (os.path.join(os.getcwd(), "app.py"), "."),
-    (os.path.join(os.getcwd(), "process_attendance_files.py"), "."),
-    (os.path.join(os.getcwd(), "process_confirm_sheets.py"), "."),
-    (os.path.join(os.getcwd(), "tools.py"), "."),
-    (os.path.join(os.getcwd(), "icon.ico"), ".")
-
+    ("app.py", "."),
+    ("process_attendance_files.py", "."),
+    ("process_confirm_sheets.py", "."),
+    ("tools.py", "."),
+    ("icon.ico", "."),
+    (f'font/simsun.ttf', 'font')
 ]
 datas += collect_data_files("streamlit")
 datas += copy_metadata("streamlit")
@@ -25,8 +24,10 @@ a = Analysis(
     binaries=[],
     datas=datas,
     hiddenimports=["openpyxl.utils.dataframe","openpyxl.styles","openpyxl.utils","docx",
-        "docx.shared","docx.enum.text","docx.oxml.ns","docx2pdf","tqdm"],
-    hookspath=['./hooks'],
+        "docx.shared","docx.enum.text","docx.oxml.ns","reportlab.lib.styles","reportlab.lib",
+        "reportlab.pdfbase","reportlab.pdfbase.ttfonts","reportlab.lib.units","reportlab.lib.enums",
+        "reportlab.lib.pagesizes","reportlab.platypus","pythoncom"],
+    hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],

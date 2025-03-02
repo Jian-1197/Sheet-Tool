@@ -1,12 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['ctk_ui.py','process_attendance_files.py','process_confirm_sheets.py','tools.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=["openpyxl.utils.dataframe","openpyxl.styles","openpyxl.utils","docx","docx.shared","docx.enum.text","docx.oxml.ns","docx2pdf"],
+    datas=[('font/simsun.ttf', 'font')],
+    hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

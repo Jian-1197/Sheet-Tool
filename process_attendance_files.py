@@ -4,7 +4,7 @@ import sys
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
 
-from tools import write_attendance_sheet, is_chinese
+from tools import write_attendance_sheet, is_chinese,register_chinese_font, get_pdf_styles
 
 import pandas as pd
 from openpyxl import Workbook
@@ -12,19 +12,24 @@ from docx import Document
 from docx.shared import Pt, Inches
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from docx.oxml.ns import qn
-from docx2pdf import convert     # win系统下需有word，利用docx2pdf库将docx文件转换为pdf文件
-import subprocess                # 其他平台需安装abiword软件，利用subprocess库调用abiword命令将docx文件转换为pdf文件
-from io import StringIO
-from contextlib import redirect_stdout, redirect_stderr
 
+# word转pdf在除了windows，其他平台都有点麻烦且效果不好，干脆多搞点代码直接生成pdf                                 
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.units import mm, inch
 
-# 创建一个 StringIO 对象用于捕获输出
-temp_stdout = StringIO()
-temp_stderr = StringIO()
 
 def process_attendance_files(data, date, year, month, day, output_folder):
 
     data["姓名是否中文"] = data["姓名"].apply(is_chinese)
+
+    # 筛选数据
+    filtered_data_cn = data[(data["旷课课时"] >= 2) & data["姓名是否中文"]]
+    filtered_data_cn = filtered_data_cn.sort_values(by=["旷课课时", "旷课次数"], ascending=[False, False])
+
+    filtered_data_int = data[(data["旷课课时"] >= 2) & ~data["姓名是否中文"]]
+    filtered_data_int = filtered_data_int.sort_values(by=["旷课课时", "旷课次数"], ascending=[False, False])
 
     # 考勤表excel
     def create_excel():
@@ -34,15 +39,11 @@ def process_attendance_files(data, date, year, month, day, output_folder):
         stu_cn = wb.active
         stu_cn.title = "本科生"
         cols = ["学号", "姓名", "学院", "班级", "旷课次数", "迟到次数", "早退次数", "旷课课时"]
-        filtered_data = data[(data["旷课课时"] >= 2) & data["姓名是否中文"]]
-        filtered_data = filtered_data.sort_values(by=["旷课课时", "旷课次数"], ascending=[False, False])
-        write_attendance_sheet(stu_cn, filtered_data, cols, [15, 10, 10, 10, 10, 10, 10, 10], ["学院", "班级"])
+        write_attendance_sheet(stu_cn, filtered_data_cn, cols, [15, 10, 10, 10, 10, 10, 10, 10], ["学院", "班级"])
         
         # 留学生 sheet
         international = wb.create_sheet(title="留学生")
-        filtered_data = data[(data["旷课课时"] >= 2) & ~data["姓名是否中文"]]
-        filtered_data = filtered_data.sort_values(by=["旷课课时", "旷课次数"], ascending=[False, False])
-        write_attendance_sheet(international, filtered_data, cols, [15, 35, 10, 10, 10, 10, 10, 10], ["学院", "班级"])
+        write_attendance_sheet(international, filtered_data_int, cols, [15, 35, 10, 10, 10, 10, 10, 10], ["学院", "班级"])
 
         # 保存文件
         excel_output = f"{output_folder}/计算机科学与技术学院学生第{date}上课啦系统缺勤情况.xlsx"
@@ -71,9 +72,6 @@ def process_attendance_files(data, date, year, month, day, output_folder):
         para_2.alignment = WD_PARAGRAPH_ALIGNMENT.JUSTIFY  # 设置内容两端对齐
 
         # 添加表格
-        filtered_data = data[(data["旷课课时"] >= 2) & data["姓名是否中文"]]
-        filtered_data = filtered_data.sort_values(by=["旷课课时", "旷课次数"], ascending=[False, False])
-
         table = doc.add_table(rows=1, cols=6, style="Table Grid")
         col_width_dict = {0: 1.6, 1: 1.12, 2: 0.7638, 3: 0.7638, 4: 0.7638, 5: 0.7638}
         row_height = Pt(25)
@@ -93,7 +91,7 @@ def process_attendance_files(data, date, year, month, day, output_folder):
                     run.font.bold = True            # 设置文字加粗
 
         # 添加数据行
-        for _, row in filtered_data.iterrows():
+        for _, row in filtered_data_cn.iterrows():
             row_cells = table.add_row().cells
             row_cells[0].text = str(row["学号"])
             row_cells[1].text = row["姓名"]
@@ -137,33 +135,93 @@ def process_attendance_files(data, date, year, month, day, output_folder):
         doc.save(docx_output)
         return docx_output
 
-    # 考勤通报pdf
-    def create_pdf(docx_path):
-        def convert_docx_to_pdf(input_file, output_dir='.'):
-            pdf_output = f"{output_folder}/计算机科学与技术学院学生第{date}上课啦系统缺勤通报.pdf"
-            command = [
-                'abiword',
-                '--to=pdf',
-                f'--to-name={pdf_output}',
-                input_file
-            ]
-            try:
-                # 使用 subprocess.run 执行命令
-                result = subprocess.run(command, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                print("转换成功", result.stdout.decode('utf-8', errors='ignore'))
-            except subprocess.CalledProcessError as e:
-                print("转换失败", e.stderr.decode('utf-8', errors='ignore'))
+    # 考勤通报PDF（直接生成）
+    def create_pdf():
+        # 注册中文字体
+        register_chinese_font()
+        cn_font = "SimSun"
+        styles_dict = get_pdf_styles()
 
+        # 创建PDF文档
         pdf_output = f"{output_folder}/计算机科学与技术学院学生第{date}上课啦系统缺勤通报.pdf"
+        doc = SimpleDocTemplate(
+            pdf_output,
+            pagesize=A4,
+            leftMargin=20*mm,
+            rightMargin=20*mm,
+            topMargin=15*mm,
+            bottomMargin=15*mm
+        )
 
-        # windows下可采用docx2pdf实现转换
-        if os.name == "nt":
-            with redirect_stdout(temp_stdout), redirect_stderr(temp_stderr):
-                convert(docx_path, pdf_output)
-        else:
-            convert_docx_to_pdf(docx_path, output_folder)
+        # 构建内容元素
+        elements = []
+
+        # 标题
+        title = f"第{date}“上课啦”考勤通报"
+        elements.append(Paragraph(title, styles_dict["title"]))
+
+        # 正文内容
+        content = f"以下同学在第{date}“上课啦”考勤中未正常出勤, 旷课学时计入个人档案, 并纳入日常考评。"
+        elements.append(Paragraph(content, styles_dict["content"]))
+
+        # 创建表格
+        headers = ["学号", "姓名", "旷课次数", "迟到次数", "早退次数", "旷课课时"]
+        table_data = [[Paragraph(h, styles_dict["table_header"]) for h in headers]]
+        
+        for _, row in filtered_data_cn.iterrows():
+            table_row = [
+                Paragraph(str(row["学号"]), styles_dict['table_cell']),
+                Paragraph(row["姓名"], styles_dict['table_cell']),
+                Paragraph(str(row["旷课次数"]), styles_dict['table_cell']),
+                Paragraph(str(row["迟到次数"]), styles_dict['table_cell']),
+                Paragraph(str(row["早退次数"]), styles_dict['table_cell']),
+                Paragraph(str(row["旷课课时"]), styles_dict['table_cell'])
+            ]
+            table_data.append(table_row)
+
+        # 设置列宽
+        effective_width = (A4[0] - 46*mm) / inch  # 有效宽度（英寸）
+        original_widths = [1.3, 1.22, 0.8038, 0.8038, 0.8038, 0.8038]  # 列宽比例，数字有点抽象不过问题不大
+        scale = effective_width / sum(original_widths)
+        col_widths = [w * scale * inch for w in original_widths]
+        
+        # 创建表格对象
+        table = Table(table_data, colWidths=col_widths, rowHeights=10*mm)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0,0), (-1,0), colors.lightgrey),
+            ('BOLD', (0,0), (-1,0), True),
+            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+            ('FONTNAME', (0,0), (-1,0), cn_font),
+            ('FONTSIZE', (0,0), (-1,-1), 11),
+            ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+            ('BOX', (0,0), (-1,-1), 0.5, colors.black),
+        ]))
+        elements.append(table)
+        elements.append(Spacer(1, 10*mm))
+
+        # 添加说明
+        note_text = """<para>
+        <font size=12>注:</font><br/>
+        <font size=12>一、根据学生手册中“浙江师范大学学生违纪处分规定”中第三章第二十七条规定，学生一学期内旷课累计满10学时的，给予警告处分；满20学时的，给予严重警告处分；满30学时的，给与记过处分；满40学时的，给与留校察看处分；因旷课屡次受到纪律处分并经教育不改的，可以给予开除学籍处分；</font><br/>
+        <font size=12>二、学时计算方法如下：</font><br/>
+        <font size=12>(1) 旷课1小节为1学时，未经请假缺勤1天，不足5学时按5学时计；超过5学时的，按实际学时数计；</font><br/>
+        <font size=12>(2) 学生无故迟到或早退达3次，作旷课1学时计；</font>
+        </para>"""
+        elements.append(Paragraph(note_text, styles_dict['note']))
+
+        # 特此通报
+        elements.append(Paragraph("特此通报！", styles_dict['sign']))
+
+        # 日期和学院
+        date_text = f"计算机科学与技术学院学工办<br/>{year}年{month}月{day}日"
+        elements.append(Paragraph(date_text, styles_dict['date']))
+
+        # 生成PDF
+        doc.build(elements)
+        return pdf_output
 
     # 执行
     create_excel()
-    docx_output = create_docx()
-    create_pdf(docx_output)
+    create_docx()
+    create_pdf()
