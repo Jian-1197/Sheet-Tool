@@ -90,7 +90,7 @@ def process_confirm_sheets(data, study_year, semester, start_year, start_month,
         header_sheet2 = ["序号", "姓名", "时间", "班级", "原因", "", "类型"]
 
         title = f"{study_year}学年{semester}计算机科学与技术学院违规违纪名单"
-        time_str = f"{study_year}学年{semester}学期"
+        time_str = f"{study_year}学年{semester}"
         reason_1 = "旷课课时满5学时不足10学时"
         reason_2 = ("旷课课时满10学时不足20学时", "旷课课时满20学时不足30学时")
         reason_3 = "旷课课时满30学时不足40学时"
